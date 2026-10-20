@@ -10,12 +10,12 @@
 <header class="topbar">
 <a class="brand" href="./" aria-label="Elivecode"><span class="brand-mark">e<span>/</span></span><span>elivecode<small>LIVE PLAYGROUND</small></span></a>
 <div class="project-meta"><span class="status-dot"></span><span id="saveStatus">Local workspace</span><span class="meta-divider"></span><span id="projectName">untitled-project</span></div>
-<div class="top-actions"><button class="quiet-button" id="resetBtn">Reset</button><button class="quiet-button" id="downloadBtn">Export ↓</button><button class="run-button" id="runBtn"><span>▶</span> Run <kbd>Ctrl ↵</kbd></button></div>
+<div class="top-actions"><button class="quiet-button" id="resetBtn">Reset</button><button class="quiet-button" id="downloadBtn">Export ↓</button><button class="quiet-button" id="stopBtn" title="Stop preview">■ Stop</button><button class="run-button" id="runBtn"><span>▶</span> Run <kbd>Ctrl ↵</kbd></button></div>
 </header>
 <main class="workspace">
 <section class="editor-panel" aria-label="Code editor">
 <div class="panel-heading"><div class="panel-title"><span class="tiny-square"></span> WORKSPACE <span class="subtle">/ SOURCE</span></div><div class="panel-tools"><span class="language-pill" id="languageLabel">HTML</span><button class="icon-button" id="wrapBtn" title="Toggle line wrap" aria-label="Toggle line wrap">↵</button></div></div>
-<div class="file-tabs" role="tablist" aria-label="Source files">
+<div class="import-toolbar"><button class="quiet-button" id="openProjectBtn">Open Project</button><button class="quiet-button" id="importFilesBtn">Import Files</button><button class="quiet-button" id="importFolderBtn">Import Folder</button><button class="quiet-button" id="importZipBtn">Import ZIP</button><button class="quiet-button" id="newFileBtn">+ File</button><input id="filesInput" type="file" multiple hidden><input id="folderInput" type="file" multiple webkitdirectory directory hidden><input id="zipInput" type="file" accept=".zip,application/zip" hidden><span id="importStatus" role="status">Starter workspace</span></div><div class="explorer-wrap"><div class="explorer-heading"><span>EXPLORER</span><button class="icon-button" id="toggleExplorerBtn" aria-label="Toggle explorer">−</button></div><div class="file-explorer" id="fileExplorer" aria-label="Project files"></div></div><div class="file-tabs" id="fileTabs" role="tablist" aria-label="Open source files">
 <button class="file-tab active" data-file="html" role="tab" aria-selected="true"><span class="file-icon html-icon">5</span>index.html</button>
 <button class="file-tab" data-file="css" role="tab" aria-selected="false"><span class="file-icon css-icon">✳</span>styles.css</button>
 <button class="file-tab" data-file="js" role="tab" aria-selected="false"><span class="file-icon js-icon">JS</span>app.js</button>
