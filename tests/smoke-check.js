@@ -1,0 +1,48 @@
+const fs = require("node:fs");
+const path = require("node:path");
+const vm = require("node:vm");
+const assert = require("node:assert/strict");
+
+const root = path.resolve(__dirname, "..");
+const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
+const html = read("index.html");
+const js = read("app.js");
+const css = read("styles.css");
+const vercel = JSON.parse(read("vercel.json"));
+const pkg = JSON.parse(read("package.json"));
+
+const checks = [];
+function check(name, fn) {
+  fn();
+  checks.push(name);
+}
+
+check("app.js has valid JavaScript syntax", () => new vm.Script(js, { filename: "app.js" }));
+check("package.json is valid JSON", () => assert.equal(pkg.name, "elivecode-playground"));
+check("vercel.json is valid JSON", () => assert.ok(Array.isArray(vercel.headers)));
+check("HTML references existing local assets", () => {
+  const refs = [...html.matchAll(/(?:src|href)=["']\.\/([^"']+)["']/g)].map((m) => m[1]);
+  assert.ok(refs.length > 0, "expected local asset references");
+  for (const ref of refs) assert.ok(fs.existsSync(path.join(root, ref)), `missing asset: ${ref}`);
+});
+check("all static ID selectors used by app.js exist in index.html", () => {
+  const ids = [...js.matchAll(/\$\("#([^"]+)"\)/g)].map((m) => m[1]);
+  const missing = [...new Set(ids)].filter((id) => !new RegExp(`\\bid=["']${id}["']`).test(html));
+  assert.deepEqual(missing, []);
+});
+check("all five editor tabs are present", () => {
+  for (const key of ["html", "css", "js", "json", "python"]) {
+    assert.ok(html.includes(`data-file="${key}"`), `missing editor tab: ${key}`);
+  }
+});
+check("preview iframe is sandboxed", () => assert.match(html, /<iframe[^>]+sandbox="allow-scripts/));
+check("autosave, active-file restore and responsive splitter are wired", () => {
+  assert.match(js, /setTimeout\(persistWorkspace,250\)/);
+  assert.match(js, /load\(initialFile\);run\(\)/);
+  assert.match(js, /splitter\.addEventListener\("pointermove"/);
+});
+check("CSS contains responsive layout rules", () => assert.match(css, /@media\(max-width:760px\)/));
+check("Python execution limitation is clearly handled", () => assert.match(js, /Python code is editable, but not executed/));
+
+console.log(`Elivecode smoke tests passed: ${checks.length}/${checks.length}`);
+for (const name of checks) console.log(`✓ ${name}`);
