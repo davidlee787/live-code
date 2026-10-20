@@ -16,5 +16,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Run dependency-free integration checks
+      - name: Install backend dependencies
+        run: npm install --no-audit --no-fund
+      - name: Run syntax and backend integration checks
         run: npm test
