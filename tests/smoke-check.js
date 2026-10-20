@@ -30,7 +30,7 @@ check("all static ID selectors used by app.js exist in index.html", () => {
   const missing = [...new Set(ids)].filter((id) => !new RegExp(`\\bid=["']${id}["']`).test(html));
   assert.deepEqual(missing, []);
 });
-check("all five editor tabs are present", () => {
+check("starter editor tabs are present", () => {
   for (const key of ["html", "css", "js", "json", "python"]) {
     assert.ok(html.includes(`data-file="${key}"`), `missing editor tab: ${key}`);
   }
@@ -42,7 +42,15 @@ check("autosave, active-file restore and responsive splitter are wired", () => {
   assert.match(js, /splitter\.addEventListener\("pointermove"/);
 });
 check("CSS contains responsive layout rules", () => assert.match(css, /@media\(max-width:760px\)/));
-check("Python execution limitation is clearly handled", () => assert.match(js, /Python code is editable, but not executed/));
+check("import controls and Explorer exist", () => {
+  for (const id of ["openProjectBtn","importFilesBtn","importFolderBtn","importZipBtn","filesInput","folderInput","fileExplorer","fileTabs","stopBtn"]) assert.ok(html.includes('id="'+id+'"'), "missing UI: "+id);
+  assert.match(js,/webkitdirectory/); assert.match(js,/showDirectoryPicker/); assert.match(js,/showOpenFilePicker/);
+});
+check("workspace path resolution and local resource injection exist", () => {
+  assert.match(js,/normalizePath/); assert.match(js,/resolveWorkspacePath/); assert.match(js,/buildPreviewHTML/); assert.match(js,/cssRewrite/);
+});
+check("ZIP import rejects unsafe paths", () => assert.match(js,/unsafe ZIP path rejected/));
+check("Python execution limitation is clearly handled", () => assert.match(js,/Python is editable but requires a separate runtime/));
 
 console.log(`Elivecode smoke tests passed: ${checks.length}/${checks.length}`);
 for (const name of checks) console.log(`✓ ${name}`);
