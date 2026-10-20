@@ -37,8 +37,9 @@ check("starter editor tabs are present", () => {
 });
 check("preview iframe is sandboxed", () => assert.match(html, /<iframe[^>]+sandbox="allow-scripts/));
 check("autosave, active-file restore and responsive splitter are wired", () => {
-  assert.match(js, /setTimeout\(persistWorkspace,250\)/);
-  assert.match(js, /load\(initialFile\);run\(\)/);
+  assert.match(js, /setTimeout\(persist,300\)/);
+  assert.match(js, /loadPath\(active\)/);
+  assert.match(js, /run\(\);/);
   assert.match(js, /splitter\.addEventListener\("pointermove"/);
 });
 check("CSS contains responsive layout rules", () => assert.match(css, /@media\(max-width:760px\)/));
