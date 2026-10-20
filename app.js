@@ -33,6 +33,22 @@ if(/<\/head\s*>/i.test(html))html=html.replace(/<\/head\s*>/i,`<style>\n${files.
 if(/<\/body\s*>/i.test(html))html=html.replace(/<\/body\s*>/i,`<script>\n${files.js}\n<\/script></body>`);else html+=`<script>${files.js}<\/script>`;return html}
 function run(){files[active]=editor.value;entries=[];issues=[];if(active==="json"){try{JSON.parse(files.json);log("info","JSON parsed successfully.")}catch(e){issues.push({message:e.message});log("error",e.message)}}if(active==="python")log("warn","Python code is editable, but not executed in this browser-only build. Use a server/runtime to execute Python.");try{frame.srcdoc=documentHtml();status("Preview updated")}catch(e){issues.push({message:e.message});log("error",e.message)}render()}
 function exportProject(){files[active]=editor.value;const blob=new Blob([JSON.stringify({"index.html":files.html,"styles.css":files.css,"app.js":files.js,"data.json":files.json,"main.py":files.python},null,2)],{type:"application/json"});const a=document.createElement("a"),url=URL.createObjectURL(blob);a.href=url;a.download="elivecode-source.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);status("Source exported")}
+const workspace=$(".workspace"), splitter=$(".resize-handle");
+let dragging=false;
+splitter.addEventListener("pointerdown",event=>{
+  if(matchMedia("(max-width: 760px)").matches)return;
+  dragging=true;splitter.setPointerCapture(event.pointerId);document.body.style.cursor="col-resize";document.body.style.userSelect="none";event.preventDefault();
+});
+splitter.addEventListener("pointermove",event=>{
+  if(!dragging)return;
+  const rect=workspace.getBoundingClientRect();
+  const left=Math.max(rect.width*.25,Math.min(rect.width*.75,event.clientX-rect.left));
+  workspace.style.gridTemplateColumns=`${left}px 5px minmax(0,1fr)`;
+});
+function stopDragging(){dragging=false;document.body.style.cursor="";document.body.style.userSelect=""}
+splitter.addEventListener("pointerup",stopDragging);
+splitter.addEventListener("pointercancel",stopDragging);
+addEventListener("resize",()=>{if(matchMedia("(max-width: 760px)").matches)workspace.style.gridTemplateColumns=""});
 document.querySelectorAll(".file-tab").forEach(b=>b.addEventListener("click",()=>load(b.dataset.file)));
 document.querySelectorAll(".device-btn").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".device-btn").forEach(x=>x.classList.toggle("active",x===b));device.classList.remove("desktop-frame","tablet-frame","mobile-frame");device.classList.add(b.dataset.device+"-frame")}));
 document.querySelectorAll(".console-tab").forEach(b=>b.addEventListener("click",()=>{view=b.dataset.console;document.querySelectorAll(".console-tab").forEach(x=>x.classList.toggle("active",x===b));render()}));
