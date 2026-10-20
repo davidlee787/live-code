@@ -1,25 +1,27 @@
-# Elivecode — Live Coding Playground
+# Elivecode — Full-Stack Live Coding Playground
 
-A lightweight browser-based coding workspace for HTML, CSS, JavaScript, JSON and Python source.
+A browser-based coding workspace for HTML, CSS, JavaScript, SQL, JSON and Python, with a Node.js API and SQLite sandbox.
 
 ## Features
-- Import multiple files from the Android/system file picker
-- Import a folder when browser APIs or directory input are supported
-- File Explorer, multi-file tabs, create-file action and dirty-state markers
-- Static HTML preview with local CSS, JavaScript and common asset resolution
-- Run, Stop, Refresh, responsive desktop/tablet/mobile preview
-- Console and runtime error reporting from the sandboxed iframe
-- Browser-local autosave for text files and JSON workspace export
-- Optional ZIP import through JSZip loaded on demand
+- Import multiple files, folders and ZIP archives
+- File Explorer, tabs, create-file action and browser-local autosave
+- Sandboxed HTML/CSS/JavaScript preview with console reporting
+- SQL editor backed by SQLite through the Node.js backend
+- Separate persistent SQLite database file per browser session
+- `/api/health` health check and `/api/sql/execute` query endpoint
+- JSON workspace export and responsive desktop/tablet/mobile preview
 
-## Use on Android
-Open Elivecode in a modern browser and choose **Open Project** or **Import Files**. Select multiple files in the system picker. Use **Import Folder** if your browser supports folder selection; otherwise select the files individually. Press **Run** after import. Imported code is not executed automatically.
+## Run the full-stack app
+Requires Node.js 20+. Run `npm install`, then `npm start`, and open `http://localhost:3000`. Do not open `index.html` directly if you need SQL/backend features. Express serves the UI and API. SQLite databases persist on the host disk under `data/`; back up that directory if needed.
+
+## SQL and security limits
+SQL executes against SQLite, not MySQL or PostgreSQL. Each browser session has its own database. Query input is limited to 50 KB, a maximum of 30 statements per request, 500 returned rows per result set, and a 5 MB database per session. Database/file attachment operations are blocked. The server is intended for personal or trusted development, not as an unauthenticated public multi-user service. Add authentication and stronger quotas before public deployment.
+
+## Deployment
+Use a Node.js host that supports a long-running Express process and persistent disk (for example, a VPS or container). Set the start command to `npm start`, expose the host-provided `PORT`, and keep `data/` on persistent storage. Static-only hosting and serverless deployments with ephemeral filesystems are not suitable for persistent SQLite unless storage is replaced with a managed database.
 
 ## Runtime limits
-This is a static browser IDE, not a full Node.js server. HTML, CSS, JavaScript and common local assets can be previewed. Relative local stylesheet/script references are inlined when their files are available. JavaScript module imports that depend on relative module graphs, server-side routes, npm install/build pipelines, databases, service workers and backend APIs may need a real development server and are not guaranteed to work in an iframe. Python is editable but not executed. ZIP import loads JSZip from a CDN on demand and requires internet access. Browser APIs differ, especially on Android; folder selection and writing back to original files are not universally available. Binary assets are session-only and are not included in the JSON text export.
-
-## Deploy to Vercel
-Import this public GitHub repository, choose Framework Preset **Other**, leave Build Command empty, set Output Directory to `.`, and deploy. No environment variables are required.
+This playground does not execute arbitrary Node.js or Python source from the editor. HTML/CSS/JavaScript run in a sandboxed browser preview; SQL runs on the backend against SQLite. ZIP import loads JSZip from a CDN on demand and requires internet access. Browser APIs vary, especially on Android.
 
 ## Tests
-Requires Node.js 20+. Run `npm test` for static smoke checks covering JavaScript syntax, config, local assets, sandboxing, import controls, path handling and ZIP safety. Browser-level file picker behavior must still be verified in a real Android browser.
+Run `npm test` with Node.js 20+. Smoke tests check syntax, configuration, import controls, SQL UI and backend routes. Browser-level behavior still needs verification in a real browser.
