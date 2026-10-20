@@ -2,14 +2,13 @@
   "name": "elivecode-playground",
   "version": "1.1.0",
   "private": true,
-  "description": "Full-stack live coding playground with a Node.js API and persistent SQLite sandbox",
+  "description": "Browser-based coding playground with optional Gemini Code Assist",
   "scripts": {
     "start": "node server.js",
     "test": "node tests/smoke-check.js && node tests/backend-integration.js"
   },
   "dependencies": {
     "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "sql.js": "^1.13.0"
+    "express": "^4.21.2"
   }
 }
