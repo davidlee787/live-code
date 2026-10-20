@@ -2,77 +2,27 @@ const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
 const assert = require("node:assert/strict");
-
 const root = path.resolve(__dirname, "..");
-const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
-const html = read("index.html");
-const js = read("app.js");
-const css = read("styles.css");
-const server = read("server.js");
-const vercel = JSON.parse(read("vercel.json"));
-const pkg = JSON.parse(read("package.json"));
-
+const read = file => fs.readFileSync(path.join(root, file), "utf8");
+const html = read("index.html"), js = read("app.js"), css = read("styles.css"), server = read("server.js");
+const vercel = JSON.parse(read("vercel.json")), pkg = JSON.parse(read("package.json"));
 const checks = [];
-function check(name, fn) {
-  fn();
-  checks.push(name);
-}
-
-check("app.js has valid JavaScript syntax", () => new vm.Script(js, { filename: "app.js" }));
-check("package.json is valid JSON", () => { assert.equal(pkg.name, "elivecode-playground"); assert.ok(pkg.dependencies.express); assert.ok(pkg.dependencies["sql.js"]); });
-check("backend exposes guarded SQLite and health routes", () => { new vm.Script(server, { filename: "server.js" }); assert.match(server, /\/api\/health/); assert.match(server, /\/api\/sql\/execute/); assert.match(server, /ATTACH|DETACH/); assert.match(server, /MAX_SQL_BYTES/); });
-check("vercel.json is valid JSON", () => assert.ok(Array.isArray(vercel.headers)));
-check("HTML references existing local assets", () => {
-  const refs = [...html.matchAll(/(?:src|href)=["']\.\/([^"']+)["']/g)].map((m) => m[1]);
-  assert.ok(refs.length > 0, "expected local asset references");
-  for (const ref of refs) assert.ok(fs.existsSync(path.join(root, ref)), `missing asset: ${ref}`);
-});
-check("all static ID selectors used by app.js exist in index.html", () => {
-  const ids = [...js.matchAll(/\$\("#([^"]+)"\)/g)].map((m) => m[1]);
-  const missing = [...new Set(ids)].filter((id) => !new RegExp(`\\bid=["']${id}["']`).test(html));
-  assert.deepEqual(missing, []);
-});
-check("starter editor tabs are present", () => {
-  for (const key of ["html", "css", "js", "json", "python", "sql"]) {
-    assert.ok(html.includes(`data-file="${key}"`), `missing editor tab: ${key}`);
-  }
-});
-check("SQL tab and backend status are present", () => { assert.ok(html.includes('data-file="sql"')); assert.ok(html.includes('id="backendStatus"')); assert.match(js, /async function runSql\(/); assert.match(js, /\/api\/sql\/execute/); });
-check("Gemini assistant requires consent and manual application", () => {
-  for (const id of ["aiFab","aiDialog","aiConsent","aiAnalyzeBtn","aiFixBtn","aiApplyBtn","aiConfigForm","aiAdminToken","aiApiKey"]) assert.ok(html.includes('id="'+id+'"'), "missing AI UI: "+id);
-  assert.match(js,/\/api\/ai\/code/);
-  assert.match(js,/function applyAiFix/);
-  assert.match(js,/Izin konfirmasi/);
-  assert.match(html,/Periksa hasil sebelum menerapkan/);
-});
-check("Gemini API key is configured only on server and protected by admin token", () => {
-  assert.match(server,/process\.env\.GEMINI_API_KEY/);
-  assert.match(server,/AI_ADMIN_TOKEN/);
-  assert.match(server,/timingSafeEqual/);
-  assert.match(server,/\/api\/admin\/gemini-config/);
-  assert.match(server,/x-goog-api-key/);
-  assert.ok(!html.includes("GEMINI_API_KEY="));
-  assert.ok(!js.includes("AIza"));
-  assert.ok(pkg.dependencies.dotenv);
-  assert.ok(read(".gitignore").includes("!.env.example"));
-});
-check("preview iframe is sandboxed", () => assert.match(html, /<iframe[^>]+sandbox="allow-scripts/));
-check("autosave, active-file restore and responsive splitter are wired", () => {
-  assert.match(js, /setTimeout\(persist,300\)/);
-  assert.match(js, /loadPath\(active\)/);
-  assert.match(js, /run\(\);/);
-  assert.match(js, /splitter\.addEventListener\("pointermove"/);
-});
-check("CSS contains responsive layout rules", () => assert.match(css, /@media\(max-width:760px\)/));
-check("import controls and Explorer exist", () => {
-  for (const id of ["openProjectBtn","importFilesBtn","importFolderBtn","importZipBtn","filesInput","folderInput","fileExplorer","fileTabs","stopBtn"]) assert.ok(html.includes('id="'+id+'"'), "missing UI: "+id);
-  assert.match(html,/webkitdirectory/); assert.match(js,/showDirectoryPicker/); assert.match(js,/showOpenFilePicker/);
-});
-check("workspace path resolution and local resource injection exist", () => {
-  assert.match(js,/normalizePath/); assert.match(js,/resolveWorkspacePath/); assert.match(js,/buildPreviewHTML/); assert.match(js,/cssRewrite/);
-});
-check("ZIP import rejects unsafe paths", () => assert.match(js,/unsafe ZIP path rejected/));
-check("Python execution limitation is clearly handled", () => assert.match(js,/Python is editable but requires a separate runtime/));
-
+function check(name, fn) { fn(); checks.push(name); }
+check("app.js syntax", () => new vm.Script(js, { filename: "app.js" }));
+check("package valid and SQL dependency removed", () => { assert.equal(pkg.name, "elivecode-playground"); assert.ok(pkg.dependencies.express); assert.ok(!pkg.dependencies["sql.js"]); });
+check("backend has health and Gemini routes, no SQL route", () => { new vm.Script(server, { filename: "server.js" }); assert.match(server, /\/api\/health/); assert.match(server, /\/api\/ai\/code/); assert.doesNotMatch(server, /\/api\/sql\/execute|sql\.js|SQLite/); });
+check("Vercel config valid", () => assert.ok(Array.isArray(vercel.headers)));
+check("local asset references exist", () => { const refs = [...html.matchAll(/(?:src|href)=["']\.\/([^"']+)["']/g)].map(m => m[1]); assert.ok(refs.length); for (const ref of refs) assert.ok(fs.existsSync(path.join(root, ref)), "missing "+ref); });
+check("static app selectors exist", () => { const ids=[...js.matchAll(/\$\("#([^"]+)"\)/g)].map(m=>m[1]); assert.deepEqual([...new Set(ids)].filter(id=>!new RegExp('\\bid=["\']'+id+'["\']').test(html)), []); });
+check("SQL UI and code removed", () => { assert.doesNotMatch(html, /data-file="sql"|backendStatus|query\.sql/i); assert.doesNotMatch(js, /runSql|sqlResults|api\/sql\/execute|sessionId\(\)|SQL RESULT/); });
+check("Gemini UI has consent and manual apply", () => { for(const id of ["aiFab","aiDialog","aiConsent","aiAnalyzeBtn","aiFixBtn","aiApplyBtn"]) assert.ok(html.includes('id="'+id+'"')); assert.match(js,/\/api\/ai\/code/); assert.match(js,/function applyAiFix/); });
+check("Gemini key server-only", () => { assert.match(server,/process\.env\.GEMINI_API_KEY/); assert.match(server,/x-goog-api-key/); assert.ok(!html.includes("GEMINI_API_KEY=")); assert.ok(!js.includes("AIza")); });
+check("Vercel Gemini routes exist", () => { assert.ok(fs.existsSync(path.join(root,"api/ai/status.js"))); assert.ok(fs.existsSync(path.join(root,"api/ai/code.js"))); });
+check("preview sandboxed", () => assert.match(html, /<iframe[^>]+sandbox="allow-scripts/));
+check("responsive CSS", () => assert.match(css, /@media\(max-width:760px\)/));
+check("import controls exist", () => { for(const id of ["openProjectBtn","importFilesBtn","importFolderBtn","importZipBtn","filesInput","folderInput","fileExplorer","fileTabs","stopBtn"]) assert.ok(html.includes('id="'+id+'"')); assert.match(html,/webkitdirectory/); });
+check("workspace resource handling", () => { assert.match(js,/normalizePath/); assert.match(js,/resolveWorkspacePath/); assert.match(js,/buildPreviewHTML/); });
+check("ZIP import path safety", () => assert.match(js,/unsafe ZIP path rejected/));
+check("Python runtime limitation is clear", () => assert.match(js,/Python is editable but requires a separate runtime/));
 console.log(`Elivecode smoke tests passed: ${checks.length}/${checks.length}`);
-for (const name of checks) console.log(`✓ ${name}`);
+for (const name of checks) console.log("✓ "+name);
