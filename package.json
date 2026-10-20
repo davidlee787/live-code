@@ -1,0 +1,9 @@
+{
+  "name": "elivecode-playground",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static live-coding playground",
+  "scripts": {
+    "start": "npx serve ."
+  }
+}
