@@ -26,3 +26,6 @@ This first version edits and previews HTML/CSS/JavaScript in the browser. Python
 
 ## Local use
 Open `index.html` in a modern browser, or serve the folder with any static HTTP server.
+
+## Run integration smoke checks
+Requires Node.js 20 or newer. Run `npm test` to check JavaScript syntax, JSON configuration, local asset references, editor tabs, sandboxing, autosave wiring, and responsive layout. GitHub Actions runs these checks on pushes to `main` and pull requests.
