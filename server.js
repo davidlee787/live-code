@@ -61,6 +61,7 @@ app.post("/api/sql/execute", async (req, res) => {
     return res.status(400).json({ error: error && error.message ? error.message : "Query gagal dijalankan." });
   }
 });
+app.use("/data", (req, res) => res.status(404).send("Not found"));
 app.use(express.static(ROOT, { index: "index.html", dotfiles: "ignore" }));
 app.use((req, res) => req.path.startsWith("/api/") ? res.status(404).json({ error: "API endpoint tidak ditemukan." }) : res.status(404).send("Not found"));
 app.listen(PORT, "0.0.0.0", () => console.log("Elivecode full-stack server listening on port " + PORT));
