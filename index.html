@@ -35,5 +35,21 @@
 </section>
 </main>
 <footer class="statusbar"><span><span class="status-dot"></span> Ready</span><span>Elivecode <span class="status-version">v1.0.0</span></span><span>HTML · CSS · JS · SQL · JSON · Python</span></footer>
-</div><script src="./app.js"></script>
+</div>
+<button class="ai-fab" id="aiFab" type="button" aria-label="Buka Gemini AI coding assistant" title="Gemini AI — bantu coding"><span class="ai-g-mark">G</span><span class="ai-fab-label">AI</span></button>
+<dialog class="ai-dialog" id="aiDialog" aria-labelledby="aiTitle">
+<div class="ai-dialog-shell">
+<header class="ai-dialog-head"><div class="ai-brand"><span class="ai-g-mark">G</span><div><strong id="aiTitle">Gemini Code Assist</strong><small id="aiStatus">Memeriksa konfigurasi server…</small></div></div><button class="icon-button" id="aiCloseBtn" type="button" aria-label="Tutup AI assistant">×</button></header>
+<div class="ai-dialog-body">
+<div class="ai-scope-note"><strong>Perizinan aktif</strong><span>AI hanya menerima file yang sedang terbuka. Kode tidak diubah otomatis. Jangan kirim token, password, API key, atau data pribadi.</span></div>
+<div class="ai-current-file">FILE AKTIF <strong id="aiCurrentFile">index.html</strong><span id="aiLineCount">1 baris</span></div>
+<label class="ai-label" for="aiInstruction">Apa yang ingin dibantu? <span>opsional</span></label><textarea id="aiInstruction" class="ai-instruction" rows="2" maxlength="1200" placeholder="Contoh: cari bug pada event handler dan jelaskan penyebabnya."></textarea>
+<label class="ai-consent"><input id="aiConsent" type="checkbox"><span>Saya mengizinkan isi file aktif dikirim ke Google Gemini untuk permintaan ini.</span></label>
+<div class="ai-actions"><button class="ai-action-primary" id="aiAnalyzeBtn" type="button">⌕ Scan kesalahan</button><button class="ai-action-secondary" id="aiFixBtn" type="button">✳ Sarankan perbaikan</button></div>
+<div id="aiBusy" class="ai-busy" hidden><span class="ai-spinner"></span> Gemini sedang menganalisis kode…</div>
+<section id="aiResultPanel" class="ai-result-panel" hidden><div class="ai-result-heading"><strong id="aiResultTitle">Hasil analisis</strong><span id="aiIssueBadge"></span></div><div id="aiSummary" class="ai-summary"></div><div id="aiIssues" class="ai-issues"></div><div id="aiCodeReview" class="ai-code-review" hidden><label class="ai-label" for="aiProposedCode">Usulan kode — belum diterapkan</label><textarea id="aiProposedCode" class="ai-proposed-code" readonly spellcheck="false"></textarea><div class="ai-apply-row"><span>Periksa hasil sebelum menerapkan.</span><button id="aiApplyBtn" type="button">Terapkan perbaikan</button></div></div></section>
+<details class="ai-admin-settings" id="aiAdminSettings"><summary>Pengaturan admin · konfigurasi Gemini</summary><p>Khusus admin. Token admin harus diatur terlebih dahulu di environment server sebagai <code>AI_ADMIN_TOKEN</code>. Kunci API tidak disimpan di browser atau dikirim kembali setelah disimpan.</p><form id="aiConfigForm"><label class="ai-label" for="aiAdminToken">Token admin</label><input id="aiAdminToken" type="password" autocomplete="current-password" required maxlength="500" placeholder="AI_ADMIN_TOKEN"><label class="ai-label" for="aiApiKey">Gemini API key</label><input id="aiApiKey" type="password" autocomplete="new-password" required maxlength="500" placeholder="Tempel API key Gemini"><label class="ai-label" for="aiModel">Model Gemini</label><input id="aiModel" type="text" maxlength="100" value="gemini-3.8-flash" pattern="gemini-[A-Za-z0-9.-]+" placeholder="gemini-3.8-flash"><button class="ai-action-primary ai-save-config" type="submit">Simpan key di server</button><div id="aiConfigMessage" role="status" class="ai-config-message"></div></form></details>
+<p class="ai-privacy-foot">Permintaan dikirim melalui backend Elivecode ke API Google Gemini. Penggunaan tunduk pada kuota dan kebijakan Google. Usulan perbaikan tidak diterapkan otomatis.</p>
+</div></div></dialog>
+<script src="./app.js"></script>
 </body></html>
