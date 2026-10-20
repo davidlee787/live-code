@@ -45,7 +45,7 @@ check("autosave, active-file restore and responsive splitter are wired", () => {
 check("CSS contains responsive layout rules", () => assert.match(css, /@media\(max-width:760px\)/));
 check("import controls and Explorer exist", () => {
   for (const id of ["openProjectBtn","importFilesBtn","importFolderBtn","importZipBtn","filesInput","folderInput","fileExplorer","fileTabs","stopBtn"]) assert.ok(html.includes('id="'+id+'"'), "missing UI: "+id);
-  assert.match(js,/webkitdirectory/); assert.match(js,/showDirectoryPicker/); assert.match(js,/showOpenFilePicker/);
+  assert.match(html,/webkitdirectory/); assert.match(js,/showDirectoryPicker/); assert.match(js,/showOpenFilePicker/);
 });
 check("workspace path resolution and local resource injection exist", () => {
   assert.match(js,/normalizePath/); assert.match(js,/resolveWorkspacePath/); assert.match(js,/buildPreviewHTML/); assert.match(js,/cssRewrite/);
