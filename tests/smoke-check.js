@@ -8,6 +8,7 @@ const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 const html = read("index.html");
 const js = read("app.js");
 const css = read("styles.css");
+const server = read("server.js");
 const vercel = JSON.parse(read("vercel.json"));
 const pkg = JSON.parse(read("package.json"));
 
@@ -18,7 +19,8 @@ function check(name, fn) {
 }
 
 check("app.js has valid JavaScript syntax", () => new vm.Script(js, { filename: "app.js" }));
-check("package.json is valid JSON", () => assert.equal(pkg.name, "elivecode-playground"));
+check("package.json is valid JSON", () => { assert.equal(pkg.name, "elivecode-playground"); assert.ok(pkg.dependencies.express); assert.ok(pkg.dependencies["sql.js"]); });
+check("backend exposes guarded SQLite and health routes", () => { new vm.Script(server, { filename: "server.js" }); assert.match(server, /\/api\/health/); assert.match(server, /\/api\/sql\/execute/); assert.match(server, /ATTACH|DETACH/); assert.match(server, /MAX_SQL_BYTES/); });
 check("vercel.json is valid JSON", () => assert.ok(Array.isArray(vercel.headers)));
 check("HTML references existing local assets", () => {
   const refs = [...html.matchAll(/(?:src|href)=["']\.\/([^"']+)["']/g)].map((m) => m[1]);
@@ -31,10 +33,11 @@ check("all static ID selectors used by app.js exist in index.html", () => {
   assert.deepEqual(missing, []);
 });
 check("starter editor tabs are present", () => {
-  for (const key of ["html", "css", "js", "json", "python"]) {
+  for (const key of ["html", "css", "js", "json", "python", "sql"]) {
     assert.ok(html.includes(`data-file="${key}"`), `missing editor tab: ${key}`);
   }
 });
+check("SQL tab and backend status are present", () => { assert.ok(html.includes('data-file="sql"')); assert.ok(html.includes('id="backendStatus"')); assert.match(js, /async function runSql\(/); assert.match(js, /\/api\/sql\/execute/); });
 check("preview iframe is sandboxed", () => assert.match(html, /<iframe[^>]+sandbox="allow-scripts/));
 check("autosave, active-file restore and responsive splitter are wired", () => {
   assert.match(js, /setTimeout\(persist,300\)/);
