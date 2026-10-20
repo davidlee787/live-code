@@ -83,6 +83,7 @@ app.post("/api/admin/gemini-config", (req, res) => {
       else content += (content && !content.endsWith("\n") ? "\n" : "") + line + "\n";
     }
     fs.writeFileSync(envPath, content, { mode: 0o600 });
+    fs.chmodSync(envPath, 0o600);
     process.env.GEMINI_API_KEY = apiKey;
     process.env.GEMINI_MODEL = model;
     return res.json({ ok: true, message: "API key tersimpan di server. Nilai rahasia tidak dikembalikan." });
