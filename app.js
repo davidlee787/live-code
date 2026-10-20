@@ -22,7 +22,34 @@ function textValue(path){return typeof files[path]==="string"?files[path]:null}
 function syncLines(){nums.textContent=Array.from({length:Math.max(1,editor.value.split("\n").length)},(_,i)=>i+1).join("\n");nums.scrollTop=editor.scrollTop}
 function cursor(){const p=editor.value.slice(0,editor.selectionStart).split("\n");$("#cursorInfo").textContent="Ln "+p.length+", Col "+(p[p.length-1].length+1)}
 function saveActive(){if(typeof files[active]==="string"&&!editor.readOnly)files[active]=editor.value}
-function renderExplorer(){const root=$("#fileExplorer");root.replaceChildren();const paths=Object.keys(files).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));if(!paths.length){const d=document.createElement("div");d.className="explorer-empty";d.textContent="Belum ada file. Gunakan Open Project atau Import Files.";root.append(d);return}paths.forEach(path=>{const b=document.createElement("button");b.type="button";b.className="explorer-item"+(path===active?" active":"");b.title=path;const i=document.createElement("span");i.className="explorer-type";i.textContent=icon(path);const n=document.createElement("span");n.className="explorer-path";n.textContent=path;b.append(i,n);if(fileMeta[path]?.dirty){const d=document.createElement("span");d.textContent="•";d.style.color="var(--green)";b.append(d)}b.addEventListener("click",()=>loadPath(path));root.append(b)})}
+function renderExplorer(){
+const root=$("#fileExplorer");root.replaceChildren();
+const paths=Object.keys(files).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+if(!paths.length){const d=document.createElement("div");d.className="explorer-empty";d.textContent="Belum ada file. Gunakan Open Project atau Import Files.";root.append(d);return}
+const tree={folders:Object.create(null),files:[]};
+paths.forEach(path=>{const parts=path.split("/");let node=tree;parts.forEach((part,i)=>{if(i===parts.length-1)node.files.push(path);else{if(!node.folders[part])node.folders[part]={folders:Object.create(null),files:[]};node=node.folders[part]}})});
+function addFile(path,container,depth){
+const b=document.createElement("button");b.type="button";b.className="explorer-item"+(path===active?" active":"");b.title=path;b.style.paddingLeft=(7+depth*8)+"px";
+const i=document.createElement("span");i.className="explorer-type";i.textContent=icon(path);
+const n=document.createElement("span");n.className="explorer-path";n.textContent=path.split("/").pop();b.append(i,n);
+if(fileMeta[path]?.dirty){const d=document.createElement("span");d.textContent="•";d.style.color="var(--green)";b.append(d)}
+b.addEventListener("click",()=>loadPath(path));container.append(b)
+}
+function draw(node,container,depth){
+Object.keys(node.folders).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})).forEach(name=>{
+const wrap=document.createElement("div");wrap.className="explorer-folder";
+const button=document.createElement("button");button.type="button";button.className="explorer-item explorer-folder-button";button.setAttribute("aria-expanded","true");button.style.paddingLeft=(7+depth*8)+"px";
+const iconNode=document.createElement("span");iconNode.className="explorer-type";iconNode.textContent="▾";
+const label=document.createElement("span");label.className="explorer-path";label.textContent=name+"/";
+button.append(iconNode,label);
+const children=document.createElement("div");children.className="explorer-children";
+button.addEventListener("click",()=>{children.hidden=!children.hidden;button.setAttribute("aria-expanded",String(!children.hidden));iconNode.textContent=children.hidden?"▸":"▾"});
+wrap.append(button,children);container.append(wrap);draw(node.folders[name],children,depth+1)
+});
+node.files.sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})).forEach(path=>addFile(path,container,depth))
+}
+draw(tree,root,0)
+}
 function renderTabs(){const root=$("#fileTabs");root.replaceChildren();opened=opened.filter(p=>Object.hasOwn(files,p));if(!opened.includes(active))opened.push(active);opened.forEach(path=>{const b=document.createElement("button");b.type="button";b.className="file-tab"+(path===active?" active":"");b.setAttribute("role","tab");b.setAttribute("aria-selected",String(path===active));b.title=path;const i=document.createElement("span");i.className="file-icon";i.textContent=icon(path);const n=document.createElement("span");n.textContent=path.split("/").pop();b.append(i,n);if(fileMeta[path]?.dirty){const d=document.createElement("span");d.className="dirty-dot";d.textContent="•";b.append(d)}b.addEventListener("click",()=>loadPath(path));root.append(b)})}
 function loadPath(path){saveActive();if(!Object.hasOwn(files,path)){log("error","File tidak ditemukan: "+path);return}active=path;const binary=!!fileMeta[path]?.binary;editor.readOnly=binary;editor.value=binary?"[File biner]\n"+path+"\n\nFile ini tersedia sebagai resource di preview, tetapi tidak dapat diedit sebagai teks.":files[path];$("#languageLabel").textContent=language(path);$("#fileType").textContent=language(path);$("#projectName").textContent=path.split("/")[0]||"untitled-project";syncLines();cursor();renderTabs();renderExplorer();status(fileMeta[path]?.dirty?"Unsaved local changes":"Local workspace")}
 function log(kind,msg){entries.push({kind:kind||"log",msg:String(msg)});if(entries.length>250)entries.shift();if(kind==="error")issues.push({message:String(msg)});renderConsole()}
