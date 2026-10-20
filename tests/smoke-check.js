@@ -43,7 +43,7 @@ check("Gemini assistant requires consent and manual application", () => {
   assert.match(js,/\/api\/ai\/code/);
   assert.match(js,/function applyAiFix/);
   assert.match(js,/Izin konfirmasi/);
-  assert.match(js,/Periksa hasil sebelum menerapkan/);
+  assert.match(html,/Periksa hasil sebelum menerapkan/);
 });
 check("Gemini API key is configured only on server and protected by admin token", () => {
   assert.match(server,/process\.env\.GEMINI_API_KEY/);
