@@ -7,7 +7,7 @@ css:':root{font-family:Inter,ui-sans-serif,system-ui,sans-serif;color:#20231f;ba
 js:'document.querySelector("#hello")?.addEventListener("click", event => {event.currentTarget.innerHTML="Hello, builder ✓";console.log("Button clicked — your event handler works.");});',
 json:'{\n  "project": "untitled-project",\n  "version": 1,\n  "description": "A small live-coding experiment",\n  "features": ["HTML", "CSS", "JavaScript", "Live preview"]\n}',
 python:'# Python editor only; execution needs a Python runtime.\ndef greet(name: str) -> str:\n    return f"Hello, {name}!"\n\nprint(greet("builder"))',
-sql:"-- SQL playground: database tersimpan untuk sesi browser ini.\nCREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, done INTEGER NOT NULL DEFAULT 0);\nINSERT INTO tasks (title, done) VALUES ('Build a full-stack playground', 0);\nSELECT id, title, done FROM tasks ORDER BY id;"
+sql:"-- SQL playground: database tersimpan untuk sesi browser ini.\nCREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, done INTEGER NOT NULL DEFAULT 0);\nINSERT INTO tasks (title, done) SELECT 'Build a full-stack playground', 0 WHERE NOT EXISTS (SELECT 1 FROM tasks WHERE title = 'Build a full-stack playground');\nSELECT id, title, done FROM tasks ORDER BY id;"
 };
 const files={...sample}, fileMeta={};let active="html",entries=[],issues=[],view="console",wrap=false,explorerHidden=false,opened=["html","css","js","json","python"],previewUrls=[];
 const labels={html:"HTML",css:"CSS",js:"JAVASCRIPT",json:"JSON",python:"PYTHON"};
