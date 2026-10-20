@@ -5,7 +5,7 @@
   "description": "Full-stack live coding playground with a Node.js API and persistent SQLite sandbox",
   "scripts": {
     "start": "node server.js",
-    "test": "node tests/smoke-check.js"
+    "test": "node tests/smoke-check.js && node tests/backend-integration.js"
   },
   "dependencies": {
     "express": "^4.21.2",
