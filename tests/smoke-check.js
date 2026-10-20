@@ -38,6 +38,24 @@ check("starter editor tabs are present", () => {
   }
 });
 check("SQL tab and backend status are present", () => { assert.ok(html.includes('data-file="sql"')); assert.ok(html.includes('id="backendStatus"')); assert.match(js, /async function runSql\(/); assert.match(js, /\/api\/sql\/execute/); });
+check("Gemini assistant requires consent and manual application", () => {
+  for (const id of ["aiFab","aiDialog","aiConsent","aiAnalyzeBtn","aiFixBtn","aiApplyBtn","aiConfigForm","aiAdminToken","aiApiKey"]) assert.ok(html.includes('id="'+id+'"'), "missing AI UI: "+id);
+  assert.match(js,/\/api\/ai\/code/);
+  assert.match(js,/function applyAiFix/);
+  assert.match(js,/Izin konfirmasi/);
+  assert.match(js,/Periksa hasil sebelum menerapkan/);
+});
+check("Gemini API key is configured only on server and protected by admin token", () => {
+  assert.match(server,/process\.env\.GEMINI_API_KEY/);
+  assert.match(server,/AI_ADMIN_TOKEN/);
+  assert.match(server,/timingSafeEqual/);
+  assert.match(server,/\/api\/admin\/gemini-config/);
+  assert.match(server,/x-goog-api-key/);
+  assert.ok(!html.includes("GEMINI_API_KEY="));
+  assert.ok(!js.includes("AIza"));
+  assert.ok(pkg.dependencies.dotenv);
+  assert.ok(read(".gitignore").includes("!.env.example"));
+});
 check("preview iframe is sandboxed", () => assert.match(html, /<iframe[^>]+sandbox="allow-scripts/));
 check("autosave, active-file restore and responsive splitter are wired", () => {
   assert.match(js, /setTimeout\(persist,300\)/);
