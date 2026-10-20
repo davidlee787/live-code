@@ -36,14 +36,39 @@ function exportProject(){files[active]=editor.value;const blob=new Blob([JSON.st
 document.querySelectorAll(".file-tab").forEach(b=>b.addEventListener("click",()=>load(b.dataset.file)));
 document.querySelectorAll(".device-btn").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".device-btn").forEach(x=>x.classList.toggle("active",x===b));device.classList.remove("desktop-frame","tablet-frame","mobile-frame");device.classList.add(b.dataset.device+"-frame")}));
 document.querySelectorAll(".console-tab").forEach(b=>b.addEventListener("click",()=>{view=b.dataset.console;document.querySelectorAll(".console-tab").forEach(x=>x.classList.toggle("active",x===b));render()}));
-editor.addEventListener("input",()=>{files[active]=editor.value;syncLines();cursor();status("Unsaved local changes")});editor.addEventListener("scroll",()=>nums.scrollTop=editor.scrollTop);editor.addEventListener("click",cursor);editor.addEventListener("keyup",cursor);
+let saveTimer;
+function persistWorkspace(){
+  try {
+    files[active]=editor.value;
+    localStorage.setItem("elivecode.workspace.v1",JSON.stringify({files,active}));
+    status("Saved locally");
+  } catch (error) {
+    status("Local save unavailable");
+    log("warn","Browser storage is unavailable or full: "+error.message);
+  }
+}
+editor.addEventListener("input",()=>{
+  files[active]=editor.value;syncLines();cursor();status("Unsaved local changes");
+  clearTimeout(saveTimer);saveTimer=setTimeout(persistWorkspace,250);
+});
+editor.addEventListener("scroll",()=>nums.scrollTop=editor.scrollTop);editor.addEventListener("click",cursor);editor.addEventListener("keyup",cursor);
 editor.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){e.preventDefault();run()}if(e.key==="Tab"){e.preventDefault();editor.setRangeText("  ",editor.selectionStart,editor.selectionEnd,"end");editor.dispatchEvent(new Event("input"))}});
 $("#runBtn").addEventListener("click",run);$("#refreshBtn").addEventListener("click",run);$("#downloadBtn").addEventListener("click",exportProject);$("#clearConsoleBtn").addEventListener("click",()=>{entries=[];issues=[];render()});
 $("#wrapBtn").addEventListener("click",()=>{wrap=!wrap;editor.classList.toggle("wrap",wrap);$("#wrapBtn").style.color=wrap?"var(--green)":""});
 $("#resetBtn").addEventListener("click",()=>{if(!confirm("Reset semua file ke contoh awal? Perubahan saat ini akan hilang."))return;Object.assign(files,sample);load("html");run()});
-$("#popoutBtn").addEventListener("click",()=>{const w=window.open("","_blank");if(!w){log("warn","Popup diblokir browser.");return}w.document.open();w.document.write(documentHtml());w.document.close()});
+$("#popoutBtn").addEventListener("click",()=>{
+  const w=window.open("","_blank");
+  if(!w){log("warn","Popup diblokir browser. Izinkan pop-up untuk membuka preview.");return}
+  const html=documentHtml();
+  w.document.open();w.document.write(html);w.document.close();
+});
 addEventListener("message",e=>{if(e.data?.source!=="elivecode-preview")return;const message=(e.data.args||[]).join(" ");log(e.data.kind||"log",message);if(e.data.kind==="error")issues.push({message});render()});
-try{const saved=JSON.parse(localStorage.getItem("elivecode.workspace.v1")||"null");if(saved?.files)Object.keys(files).forEach(k=>{if(typeof saved.files[k]==="string")files[k]=saved.files[k]})}catch{}
-setInterval(()=>{try{files[active]=editor.value;localStorage.setItem("elivecode.workspace.v1",JSON.stringify({files,active}));}catch{}},1500);
-load("html");run();
+let initialFile="html";
+try {
+  const saved=JSON.parse(localStorage.getItem("elivecode.workspace.v1")||"null");
+  if(saved?.files) Object.keys(files).forEach(k=>{if(typeof saved.files[k]==="string")files[k]=saved.files[k]});
+  if(saved?.active && Object.hasOwn(files,saved.active)) initialFile=saved.active;
+} catch { /* Ignore malformed or blocked local storage and use starter files. */ }
+addEventListener("pagehide",()=>{clearTimeout(saveTimer);try{files[active]=editor.value;localStorage.setItem("elivecode.workspace.v1",JSON.stringify({files,active}));}catch{}});
+load(initialFile);run();
 })();
