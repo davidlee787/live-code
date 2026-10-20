@@ -12,7 +12,7 @@ const base = "http://127.0.0.1:" + port;
 const sessionId = "test-session-" + process.pid;
 const child = spawn(process.execPath, ["server.js"], {
   cwd: root,
-  env: { ...process.env, PORT: String(port), ELIVECODE_DATA_DIR: dataDir },
+  env: { ...process.env, PORT: String(port), ELIVECODE_DATA_DIR: dataDir, AI_ADMIN_TOKEN: "test-admin-token", GEMINI_API_KEY: "" },
   stdio: ["ignore", "ignore", "pipe"]
 });
 let stderr = "";
@@ -44,6 +44,13 @@ async function query(sql) {
     await waitForServer();
     const health = await fetch(base + "/api/health").then(r => r.json());
     assert.equal(health.ok, true, "health endpoint should be healthy");
+    const aiStatus = await fetch(base + "/api/ai/status").then(r => r.json());
+    assert.equal(aiStatus.available, false, "test process has no Gemini key");
+    assert.equal(aiStatus.adminSetupAvailable, true, "admin setup should require configured token");
+    const noKey = await fetch(base + "/api/ai/code", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "analyze", filename: "index.js", code: "console.log(1)" }) });
+    assert.equal(noKey.status, 503, "AI requests must fail closed when no key is configured");
+    const badAdmin = await fetch(base + "/api/admin/gemini-config", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ adminToken: "wrong-token", apiKey: "AIzaFakeLongTestKey000000000000000000", model: "gemini-3.8-flash" }) });
+    assert.equal(badAdmin.status, 403, "Gemini key setup must reject unauthorized admins");
 
     const created = await query("CREATE TABLE test_items (id INTEGER PRIMARY KEY, label TEXT NOT NULL); INSERT INTO test_items (id, label) VALUES (1, 'persisted'); SELECT id, label FROM test_items;");
     assert.equal(created.response.status, 200, JSON.stringify(created.body));
@@ -59,7 +66,7 @@ async function query(sql) {
 
     const dataListing = await fetch(base + "/data/session-" + sessionId + ".sqlite");
     assert.equal(dataListing.status, 404, "SQLite database files must not be served publicly");
-    console.log("Backend integration tests passed: health, SQL execution, persistence, SQL guard and private database files.");
+    console.log("Backend integration tests passed: health, SQL execution, persistence, SQL guard, private database files, AI fail-closed status and admin authorization.");
   } catch (error) {
     console.error(error);
     process.exitCode = 1;
